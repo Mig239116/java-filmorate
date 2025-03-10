@@ -24,60 +24,64 @@ public class UserController {
 
     @PostMapping
     public User addUser(@RequestBody User user) {
-        String validation = validateUser(user);
-        if (validation != null) {
-            log.error(validation);
-            throw new ValidationException(validation);
+        try {
+            validateUser(user);
+            user.setId(getNextId());
+            users.put(user.getId(), user);
+            log.info("Добавлен пользователь " + user.getName() + "c ид " + user.getId());
+            return user;
+        } catch (ValidationException e) {
+            log.error(e.getMessage());
+            throw new ValidationException(e.getMessage());
         }
-        user.setId(getNextId());
-        users.put(user.getId(), user);
-        log.info("Добавлен пользователь " + user.getName() + "c ид " + user.getId());
-        return user;
     }
 
     @PutMapping
     public User updateUser(@RequestBody User newUser) {
         if (newUser.getId() == null) {
             log.error("Id должен быть указан");
-            throw new NotFoundException("Id должен быть указан");
+            throw new ValidationException("Id должен быть указан");
         }
         if (users.containsKey(newUser.getId())) {
             User oldUser = users.get(newUser.getId());
-            String validation = validateUser(newUser);
-            if (validation != null) {
-                log.error(validation);
-                throw new ValidationException(validation);
+            try {
+                validateUser(newUser);
+                oldUser.setEmail(newUser.getEmail());
+                oldUser.setBirthday(newUser.getBirthday());
+                oldUser.setName(newUser.getName());
+                oldUser.setLogin(newUser.getLogin());
+                log.info("Обновлен пользователь " + newUser.getName() + "c ид " + newUser.getId());
+                return oldUser;
+            } catch (ValidationException e) {
+                log.error(e.getMessage());
+                throw new ValidationException(e.getMessage());
             }
-            oldUser.setEmail(newUser.getEmail());
-            oldUser.setBirthday(newUser.getBirthday());
-            oldUser.setName(newUser.getName());
-            oldUser.setLogin(newUser.getLogin());
-            log.info("Обновлен пользователь " + newUser.getName() + "c ид " + newUser.getId());
-            return oldUser;
         }
         log.error("Пользователь с id = " + newUser.getId() + " не найден!");
         throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден!");
     }
 
-    private String validateUser(User user) {
+    private void validateUser(User user) throws ValidationException {
         if (user.getEmail() == null ||
                 user.getEmail().isBlank() ||
                 !user.getEmail().contains("@")) {
-            return "Электронная почта не может быть пустой и должна содержать символ @";
+            throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
         }
         if (user.getLogin() == null ||
                 user.getLogin().isBlank() ||
                 user.getLogin().contains(" ")) {
-            return "Логин не может быть пустым и содержать пробелы";
+            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         }
         if (user.getName() == null || user.getName().isBlank()) {
             log.warn("Имя не указано. Будет использован логин вместо имени.");
             user.setName(user.getLogin());
         }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            return "Дата рождения не может быть в будущем";
+        if (user.getBirthday() == null) {
+            throw new ValidationException("Дата рождения обязательное поле");
         }
-        return null;
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть в будущем");
+        }
     }
 
     private Long getNextId() {
