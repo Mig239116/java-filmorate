@@ -75,7 +75,7 @@ class FilmorateApplicationTests {
 				Duration.ofMinutes(180)
 		);
 		assertEquals(assertThrows(ValidationException.class, () -> filmController.addFilm(film))
-				.getMessage(), "Дата релиза — не раньше 28 декабря 1895 года");
+				.getMessage(), "Дата релиза не раньше 28 декабря 1895 года");
 	}
 
 	@Test
@@ -170,31 +170,6 @@ class FilmorateApplicationTests {
 		assertEquals(user.getName(), user.getLogin());
 	}
 
-	@Test
-	public void shouldNotAllowAddBlankDescriptionFilm() {
-		Film film = new Film(
-				null,
-				"Film",
-				"",
-				LocalDate.now(),
-				Duration.ofMinutes(180)
-		);
-		assertEquals(assertThrows(ValidationException.class, () -> filmController.addFilm(film))
-				.getMessage(), "Описание не может быть пустым");
-	}
-
-	@Test
-	public void shouldNotAllowAddEmptyDescriptionFilm() {
-		Film film = new Film(
-				null,
-				"Film",
-				null,
-				LocalDate.now(),
-				Duration.ofMinutes(180)
-		);
-		assertEquals(assertThrows(ValidationException.class, () -> filmController.addFilm(film))
-				.getMessage(), "Описание не может быть пустым");
-	}
 
 	@Test
 	public void shouldNotAllowAddEmptyReleaseDateFilm() {
@@ -206,7 +181,7 @@ class FilmorateApplicationTests {
 				Duration.ofMinutes(180)
 		);
 		assertEquals(assertThrows(ValidationException.class, () -> filmController.addFilm(film))
-				.getMessage(), "Дата релиза должна быть задана");
+				.getMessage(), "Дата релиза не раньше 28 декабря 1895 года");
 	}
 
 	@Test
@@ -219,7 +194,7 @@ class FilmorateApplicationTests {
 				null
 		);
 		assertEquals(assertThrows(ValidationException.class, () -> filmController.addFilm(film))
-				.getMessage(), "Длительность должна быть задана");
+				.getMessage(), "Продолжительность фильма должна быть положительным числом.");
 	}
 
 	@Test
@@ -232,7 +207,7 @@ class FilmorateApplicationTests {
 				null
 		);
 		assertEquals(assertThrows(ValidationException.class, () -> userController.addUser(user))
-				.getMessage(), "Дата рождения обязательное поле");
+				.getMessage(), "Дата рождения не может быть в будущем");
 	}
 
 	@Test

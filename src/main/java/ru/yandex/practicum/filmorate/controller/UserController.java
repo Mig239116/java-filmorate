@@ -24,16 +24,11 @@ public class UserController {
 
     @PostMapping
     public User addUser(@RequestBody User user) {
-        try {
             validateUser(user);
             user.setId(getNextId());
             users.put(user.getId(), user);
             log.info("Добавлен пользователь " + user.getName() + "c ид " + user.getId());
             return user;
-        } catch (ValidationException e) {
-            log.error(e.getMessage());
-            throw new ValidationException(e.getMessage());
-        }
     }
 
     @PutMapping
@@ -44,7 +39,6 @@ public class UserController {
         }
         if (users.containsKey(newUser.getId())) {
             User oldUser = users.get(newUser.getId());
-            try {
                 validateUser(newUser);
                 oldUser.setEmail(newUser.getEmail());
                 oldUser.setBirthday(newUser.getBirthday());
@@ -52,10 +46,6 @@ public class UserController {
                 oldUser.setLogin(newUser.getLogin());
                 log.info("Обновлен пользователь " + newUser.getName() + "c ид " + newUser.getId());
                 return oldUser;
-            } catch (ValidationException e) {
-                log.error(e.getMessage());
-                throw new ValidationException(e.getMessage());
-            }
         }
         log.error("Пользователь с id = " + newUser.getId() + " не найден!");
         throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден!");
@@ -65,21 +55,23 @@ public class UserController {
         if (user.getEmail() == null ||
                 user.getEmail().isBlank() ||
                 !user.getEmail().contains("@")) {
+            log.error("Электронная почта не может быть пустой и должна содержать символ @");
             throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
         }
         if (user.getLogin() == null ||
                 user.getLogin().isBlank() ||
                 user.getLogin().contains(" ")) {
+            log.error("Логин не может быть пустым и содержать пробелы");
             throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         }
         if (user.getName() == null || user.getName().isBlank()) {
             log.warn("Имя не указано. Будет использован логин вместо имени.");
             user.setName(user.getLogin());
         }
-        if (user.getBirthday() == null) {
-            throw new ValidationException("Дата рождения обязательное поле");
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
+
+        if (user.getBirthday() == null
+                || user.getBirthday().isAfter(LocalDate.now())) {
+            log.error("Дата рождения не может быть в будущем");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }
