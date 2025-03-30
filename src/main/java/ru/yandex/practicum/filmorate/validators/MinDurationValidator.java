@@ -4,7 +4,6 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.time.Duration;
-import java.time.LocalDate;
 
 public class MinDurationValidator implements ConstraintValidator<MinDuration, Duration> {
     private long minSeconds;

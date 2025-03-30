@@ -1,12 +1,9 @@
 package ru.yandex.practicum.filmorate.service.film;
 
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.Collection;
 
-import static java.time.Month.DECEMBER;
 
 
 public interface FilmService {

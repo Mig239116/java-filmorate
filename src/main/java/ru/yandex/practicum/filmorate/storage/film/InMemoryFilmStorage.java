@@ -1,15 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.time.Month.DECEMBER;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage{
