@@ -12,7 +12,7 @@ import java.util.Collection;
 
 @Service
 @Slf4j
-public class InMemoryFilmService implements FilmService{
+public class InMemoryFilmService implements FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
