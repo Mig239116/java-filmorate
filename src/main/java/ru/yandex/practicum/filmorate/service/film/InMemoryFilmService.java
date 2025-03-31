@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -37,40 +38,26 @@ public class InMemoryFilmService implements FilmService {
 
     @Override
     public Film updateFilm(Film film) {
-        if (filmStorage.getById(film.getId()).isPresent()) {
-            log.debug("Запрос на обновление фильма: " + film);
-            return filmStorage.updateFilm(film);
-        }
-        log.error("Фильм с " + film.getId() + "не найден");
-        throw new NotFoundException("Фильм с " + film.getId() + "не найден");
+        getFilmById(film.getId());
+        log.debug("Запрос на обновление фильма: " + film);
+        return filmStorage.updateFilm(film);
     }
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        if (filmStorage.getById(filmId).isEmpty()) {
-            log.error("Фильм с " + filmId + "не найден");
-            throw new NotFoundException("Фильм с " + filmId + "не найден");
-        } else if (userStorage.getById(userId).isEmpty()) {
-            log.error("Пользователь с " + userId + "не найден");
-            throw new NotFoundException("Пользователь с " + userId + "не найден");
-        } else {
-            log.info("Пользователь " + userId + "поставил лайк фильму" + filmId);
-            filmStorage.addLike(filmId, userId);
-        }
+        getFilmById(filmId);
+        getUserById(userId);
+        log.info("Пользователь " + userId + "поставил лайк фильму" + filmId);
+        filmStorage.addLike(filmId, userId);
+
     }
 
     @Override
     public void deleteLike(Long filmId, Long userId) {
-        if (filmStorage.getById(filmId).isEmpty()) {
-            log.error("Фильм с " + filmId + "не найден");
-            throw new NotFoundException("Фильм с " + filmId + "не найден");
-        } else if (userStorage.getById(userId).isEmpty()) {
-            log.error("Пользователь с " + userId + "не найден");
-            throw new NotFoundException("Пользователь с " + userId + "не найден");
-        } else {
-            log.info("Пользователь " + userId + "удалил лайк фильму" + filmId);
-            filmStorage.deleteLike(filmId, userId);
-        }
+        getFilmById(filmId);
+        getUserById(userId);
+        log.info("Пользователь " + userId + "удалил лайк фильму" + filmId);
+        filmStorage.deleteLike(filmId, userId);
     }
 
     @Override
@@ -81,8 +68,26 @@ public class InMemoryFilmService implements FilmService {
 
     @Override
     public Film getByID(Long id) {
-        return filmStorage.getById(id).orElseThrow(
-                () -> new NotFoundException("Фильм с id = " + id + "не найден")
+        return getFilmById(id);
+    }
+
+    private User getUserById(Long userId) {
+        return userStorage.getById(userId).orElseThrow(
+                () -> {
+                    NotFoundException e = new NotFoundException("Пользователь с " + userId + " не найден");
+                    log.error(e.getMessage());
+                    return e;
+                }
+        );
+    }
+
+    private Film getFilmById(Long filmId) {
+        return filmStorage.getById(filmId).orElseThrow(
+                () -> {
+                    NotFoundException e = new NotFoundException("Фильм с id = " + filmId + " не найден");
+                    log.error(e.getMessage());
+                    return e;
+                }
         );
     }
 }

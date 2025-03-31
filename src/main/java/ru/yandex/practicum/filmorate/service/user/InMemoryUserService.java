@@ -33,64 +33,57 @@ public class InMemoryUserService implements UserService {
 
     @Override
     public User updateUser(User user) {
-        if (userStorage.getById(user.getId()).isPresent()) {
-            log.info("Запрос на обновление пользователя " + user);
-            return userStorage.updateUser(user);
-        }
-        log.error("Пользователь с " + user.getId() + "не найден");
-        throw new NotFoundException("Пользователь с " + user.getId() + "не найден");
+        getUserById(user.getId());
+        log.info("Запрос на обновление пользователя " + user);
+        return userStorage.updateUser(user);
+
     }
 
     @Override
     public void addFriend(Long userId, Long friendId) {
-        if (userStorage.getById(userId).isPresent()
-                && userStorage.getById(friendId).isPresent()) {
-            log.info("Пользователь " + userId + "добавил в друзья пользователя " + friendId);
-            userStorage.addFriend(userId, friendId);
-        } else {
-            log.error("Пользователи не найдены");
-            throw new NotFoundException("Пользователи не найдены");
-        }
+        getUserById(userId);
+        getUserById(friendId);
+        log.info("Пользователь " + userId + "добавил в друзья пользователя " + friendId);
+        userStorage.addFriend(userId, friendId);
     }
 
     @Override
     public void deleteFriend(Long userId, Long friendId) {
-        if (userStorage.getById(userId).isPresent()
-                && userStorage.getById(friendId).isPresent()) {
-            log.info("Пользователь " + userId + "удалил из друзей пользователя " + friendId);
-            userStorage.deleteFriend(userId, friendId);
-        } else {
-            throw new NotFoundException("Пользователи не найдены");
-        }
+        getUserById(userId);
+        getUserById(friendId);
+        log.info("Пользователь " + userId + "удалил из друзей пользователя " + friendId);
+        userStorage.deleteFriend(userId, friendId);
     }
 
     @Override
     public Collection<User> getAllFriends(Long userId) {
-        if (userStorage.getById(userId).isPresent()) {
-            log.info("Запрошен список всех друзей пользователя " + userId);
-            return userStorage.getAllFriends(userId);
-        }
-        log.error("Пользователи не найдены");
-        throw new NotFoundException("Пользователи не найдены");
+        getUserById(userId);
+        log.info("Запрошен список всех друзей пользователя " + userId);
+        return userStorage.getAllFriends(userId);
     }
 
     @Override
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        if (userStorage.getById(userId).isPresent()
-                && userStorage.getById(otherUserId).isPresent()) {
-            log.info("Запрошен список всех друзей пользователей " + userId + " и " + otherUserId);
-            return userStorage.getCommonFriends(userId, otherUserId);
-        }
-        log.error("Пользователи не найдены");
-        throw new NotFoundException("Пользователи не найдены");
+        getUserById(userId);
+        getUserById(otherUserId);
+        log.info("Запрошен список всех друзей пользователей " + userId + " и " + otherUserId);
+        return userStorage.getCommonFriends(userId, otherUserId);
+
     }
 
     @Override
     public User getById(Long userId) {
-        return userStorage.getById(userId).orElseThrow(
-                () -> new NotFoundException("Пользователь с " + userId + "не найден")
-        );
+        return getUserById(userId);
     }
 
+    private User getUserById(Long userId) {
+        return userStorage.getById(userId).orElseThrow(
+                () -> {
+                    NotFoundException e = new NotFoundException("Пользователь с " + userId + " не найден");
+                    log.error(e.getMessage());
+                    return e;
+                }
+        );
+    }
 
 }

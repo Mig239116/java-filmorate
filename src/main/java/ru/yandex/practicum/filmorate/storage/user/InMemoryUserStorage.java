@@ -54,16 +54,16 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public Collection<User> getAllFriends(Long userId) {
-        return users.values().stream()
-                        .filter(user -> users.get(userId).getFriends().contains(user.getId()))
-                        .collect(Collectors.toList());
+        return users.get(userId).getFriends().stream()
+                .map(users::get)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        return users.values().stream()
-                .filter(user -> users.get(userId).getFriends().contains(user.getId()) &&
-                        users.get(otherUserId).getFriends().contains(user.getId()))
+        return users.get(userId).getFriends().stream()
+                .filter(users.get(otherUserId).getFriends()::contains)
+                .map(users::get)
                 .collect(Collectors.toList());
     }
 
