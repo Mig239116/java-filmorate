@@ -1,2 +1,6 @@
 # java-filmorate
-Template repository for Filmorate project.
+## Архитектура приложения
+
+![Диаграмма архитектуры](diagram_db.png)
+
+На диаграмме представлены основные компоненты системы и их взаимодействие.
