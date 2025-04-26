@@ -104,7 +104,7 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getAllFilms(){
+    public Collection<Film> getAllFilms() {
         List<Film> films = findMany(FIND_ALL);
         for (Film film: films) {
             film.setGenres(new HashSet<>(jdbc.query(FIND_GENRES, new GenreRowMapper(), film.getId())));
