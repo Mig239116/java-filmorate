@@ -66,7 +66,7 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
 
     private static final String UPDATE_FILM = """
             UPDATE films
-            SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? 
+            SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?
             WHERE id = ?
             """;
 
@@ -76,7 +76,7 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
             """;
 
     private static final String  ADD_LIKE = """
-            INSERT INTO likes (film_id, user_id) 
+            INSERT INTO likes (film_id, user_id)
             VALUES (?, ?)
             """;
 

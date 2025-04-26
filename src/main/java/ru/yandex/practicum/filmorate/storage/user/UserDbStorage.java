@@ -16,7 +16,7 @@ import java.util.*;
 @Repository
 public class UserDbStorage extends BaseStorage<User> implements UserStorage{
     private static final String FIND_ALL = """
-            SELECT 
+            SELECT
                 *
             FROM users
             """;
@@ -27,7 +27,7 @@ public class UserDbStorage extends BaseStorage<User> implements UserStorage{
             WHERE user_id = ?
             """;
     private static final String FIND_ONE = """
-            SELECT 
+            SELECT
                 *
             FROM users
             WHERE id = ?
