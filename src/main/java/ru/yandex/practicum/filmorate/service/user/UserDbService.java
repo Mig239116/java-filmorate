@@ -12,7 +12,7 @@ import java.util.Collection;
 
 @Service
 @Slf4j
-public class UserDbService implements UserService{
+public class UserDbService implements UserService {
     private final UserStorage userStorage;
 
     @Autowired
