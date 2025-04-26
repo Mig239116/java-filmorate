@@ -12,11 +12,11 @@ import java.util.Collection;
 
 @Service
 @Slf4j
-public class InMemoryUserService implements UserService {
+public class UserDbService implements UserService{
     private final UserStorage userStorage;
 
     @Autowired
-    public InMemoryUserService(@Qualifier("inMemoryUserStorage") UserStorage userStorage) {
+    public UserDbService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -44,6 +44,7 @@ public class InMemoryUserService implements UserService {
     public void addFriend(Long userId, Long friendId) {
         getUserById(userId);
         getUserById(friendId);
+        if (userId == friendId) return;
         log.info("Пользователь " + userId + "добавил в друзья пользователя " + friendId);
         userStorage.addFriend(userId, friendId);
     }
@@ -86,5 +87,4 @@ public class InMemoryUserService implements UserService {
                 }
         );
     }
-
 }

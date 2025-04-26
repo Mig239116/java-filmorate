@@ -1,10 +1,15 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import ru.yandex.practicum.filmorate.serializers.FilmDeserializer;
+import ru.yandex.practicum.filmorate.serializers.FilmSerializer;
 import ru.yandex.practicum.filmorate.validators.MinDuration;
 import ru.yandex.practicum.filmorate.validators.NotBefore;
 
@@ -19,6 +24,8 @@ import java.util.Set;
 @Data
 @RequiredArgsConstructor
 @AllArgsConstructor
+@JsonDeserialize(using = FilmDeserializer.class)
+@JsonSerialize(using = FilmSerializer.class)
 public class Film {
     private Long id;
 
@@ -36,10 +43,16 @@ public class Film {
     private LocalDate releaseDate;
 
     @MinDuration(1)
-    @JsonFormat(shape = JsonFormat.Shape.NUMBER, pattern = "SECONDS")
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
     private Duration duration;
 
+    private Mpa mpa;
+
+
     private Set<Long> likes = new HashSet<>();
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Set<Genre> genres = new HashSet<>();
 
     public void addLike(Long userId) {
         likes.add(userId);

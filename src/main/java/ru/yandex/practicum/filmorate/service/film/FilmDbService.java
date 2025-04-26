@@ -12,17 +12,16 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 
+
 @Service
 @Slf4j
-public class InMemoryFilmService implements FilmService {
-
+public class FilmDbService implements FilmService{
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
     @Autowired
-    public InMemoryFilmService(
-            @Qualifier("inMemoryFilmStorage") FilmStorage filmStorage,
-            @Qualifier("inMemoryUserStorage") UserStorage userStorage) {
+    public FilmDbService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                         @Qualifier("userDbStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
@@ -31,6 +30,11 @@ public class InMemoryFilmService implements FilmService {
     public Collection<Film> getAllFilms() {
         log.info("Запрос на получение всех фильмов");
         return filmStorage.getAllFilms();
+    }
+
+    @Override
+    public Film getByID(Long id) {
+        return getFilmById(id);
     }
 
     @Override
@@ -54,6 +58,16 @@ public class InMemoryFilmService implements FilmService {
         filmStorage.addLike(filmId, userId);
     }
 
+    private Film getFilmById(Long filmId) {
+        return filmStorage.getById(filmId).orElseThrow(
+                () -> {
+                    NotFoundException e = new NotFoundException("Фильм с id = " + filmId + " не найден");
+                    log.error(e.getMessage());
+                    return e;
+                }
+        );
+    }
+
     @Override
     public void deleteLike(Long filmId, Long userId) {
         getFilmById(filmId);
@@ -68,25 +82,10 @@ public class InMemoryFilmService implements FilmService {
         return filmStorage.getPopularFilms(count);
     }
 
-    @Override
-    public Film getByID(Long id) {
-        return getFilmById(id);
-    }
-
     private User getUserById(Long userId) {
         return userStorage.getById(userId).orElseThrow(
                 () -> {
                     NotFoundException e = new NotFoundException("Пользователь с " + userId + " не найден");
-                    log.error(e.getMessage());
-                    return e;
-                }
-        );
-    }
-
-    private Film getFilmById(Long filmId) {
-        return filmStorage.getById(filmId).orElseThrow(
-                () -> {
-                    NotFoundException e = new NotFoundException("Фильм с id = " + filmId + " не найден");
                     log.error(e.getMessage());
                     return e;
                 }
