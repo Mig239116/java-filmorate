@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 @Repository
-public class UserDbStorage extends BaseStorage<User> implements UserStorage{
+public class UserDbStorage extends BaseStorage<User> implements UserStorage {
     private static final String FIND_ALL = """
             SELECT
                 *

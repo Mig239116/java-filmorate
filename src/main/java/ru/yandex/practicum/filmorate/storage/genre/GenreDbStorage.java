@@ -11,7 +11,7 @@ import java.util.Optional;
 
 
 @Repository
-public class GenreDbStorage extends BaseStorage<Genre> implements GenreStorage{
+public class GenreDbStorage extends BaseStorage<Genre> implements GenreStorage {
     private static final String FIND_ALL = "SELECT * FROM genres";
     private static final String FIND_ONE = "SELECT * FROM genres WHERE id = ?";
 
