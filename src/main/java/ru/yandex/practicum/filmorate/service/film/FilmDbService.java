@@ -15,7 +15,7 @@ import java.util.Collection;
 
 @Service
 @Slf4j
-public class FilmDbService implements FilmService{
+public class FilmDbService implements FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
