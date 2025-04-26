@@ -13,7 +13,7 @@ import java.util.Collection;
 
 @Service
 @Slf4j
-public class GenreDbService implements GenreService{
+public class GenreDbService implements GenreService {
     private final GenreStorage genreStorage;
 
     @Autowired
