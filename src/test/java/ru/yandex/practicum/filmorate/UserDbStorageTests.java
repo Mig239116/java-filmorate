@@ -58,7 +58,7 @@ class UserDbStorageTests {
 
     @Test
     public void checkGetAllUsers() {
-        assertEquals(userStorage.getAllUsers().size() , 3);
+        assertEquals(userStorage.getAllUsers().size(), 3);
         User user = userStorage.getAllUsers().stream().toList().get(0);
         assertThat(user).hasFieldOrPropertyWithValue("id", 1L);
         assertThat(user).hasFieldOrPropertyWithValue("email", "mail1@mail.ru");
