@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.*;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmRowMapper;
@@ -98,6 +96,19 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
             LIMIT ?
             """;
 
+    private static final String FIND_GENRES_BY_FILMID = """
+            SELECT fg.film_id, g.*
+            FROM genre_film fg
+            JOIN genres g ON fg.genre_id = g.id
+            WHERE fg.film_id IN (%s)
+            """;
+
+    private static final String FIND_LIKES_BY_FILMID = """
+            SELECT *
+            FROM likes
+            WHERE film_id IN (%s)
+            """;
+
     public FilmDbStorage(JdbcTemplate jdbc,
                          FilmRowMapper mapper) {
         super(jdbc, mapper);
@@ -106,23 +117,70 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
     @Override
     public Collection<Film> getAllFilms() {
         List<Film> films = findMany(FIND_ALL);
+        Map<Long, List<Genre>> filmGenres = getGenresByFilmId(
+                films.stream()
+                        .map(Film::getId)
+                        .toList()
+        );
+        Map<Long, List<Long>> filmLikes = getLikesByFilmId(
+                films.stream()
+                        .map(Film::getId)
+                        .toList()
+        );
         for (Film film: films) {
-            film.setGenres(new HashSet<>(jdbc.query(FIND_GENRES, new GenreRowMapper(), film.getId())));
-            film.setLikes(new HashSet<>(
-                    jdbc.query(FIND_LIKES, new RowMapper<Long>() {
-                        @Override
-                        public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
-                            return rs.getLong("user_id");
-                        }
-                    }, film.getId())
-            ));
+            List<Genre> genres = filmGenres.getOrDefault(film.getId(), Collections.emptyList());
+            film.setGenres(genres != null ? new HashSet<>(genres) : new HashSet<>());
+            List<Long> likes = filmLikes.getOrDefault(film.getId(), Collections.emptyList());
+            film.setLikes(likes != null ? new HashSet<>(likes) : new HashSet<>());
         }
         return films;
     }
 
+    private Map<Long, List<Long>> getLikesByFilmId(List<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return new HashMap<Long, List<Long>>();
+        }
+        String params = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        String sql = String.format(FIND_LIKES_BY_FILMID, params);
+        return jdbc.query(
+                sql,
+                filmIds.toArray(),
+                rs -> {
+                    Map<Long, List<Long>> result = new HashMap<>();
+                    while (rs.next()) {
+                        Long filmId = rs.getLong("film_id");
+                        Long userId = rs.getLong("user_id");
+                        result.computeIfAbsent(filmId, k -> new ArrayList<>()).add(userId);
+                    }
+                    return result;
+                }
+        );
+    }
+
+    private Map<Long, List<Genre>> getGenresByFilmId(List<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return new HashMap<Long, List<Genre>>();
+        }
+        String params = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        String sql = String.format(FIND_GENRES_BY_FILMID, params);
+        return jdbc.query(
+                sql,
+                filmIds.toArray(),
+                rs -> {
+                    Map<Long, List<Genre>> result = new HashMap<>();
+                    while (rs.next()) {
+                        Long filmId = rs.getLong("film_id");
+                        Genre genre = new Genre(rs.getLong("id"), rs.getString("name"));
+                        result.computeIfAbsent(filmId, k -> new ArrayList<>()).add(genre);
+                    }
+                    return result;
+                }
+        );
+    }
+
     @Override
     public Optional<Film> getById(Long id) {
-        Film film = findOne(FIND_ONE, id).orElseThrow(() -> new NotFoundException("Фильм не найден"));
+        Film film = findOne(FIND_ONE, id).orElseThrow(() -> new NotFoundException("Фильм " + id + " не найден"));
         film.setGenres(new HashSet<>(jdbc.query(FIND_GENRES, new GenreRowMapper(), film.getId())));
         film.setLikes(new HashSet<>(
                 jdbc.query(FIND_LIKES, new RowMapper<Long>() {
@@ -140,7 +198,7 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
         if (film.getMpa() != null) {
             MpaDbStorage mpaStorage = new MpaDbStorage(jdbc, new MpaRowMapper());
             if (mpaStorage.getById(film.getMpa().getId()).isEmpty()) {
-                throw new NotFoundException("Такого рейтинга не существует");
+                throw new NotFoundException("Такого рейтинга " + film.getMpa().getId() + " не существует");
             }
         }
         long id = insert(
@@ -175,7 +233,7 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
         );
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             Optional<Film> optional = getById(film.getId());
-            Film oldFilm = optional.orElseThrow(() -> new NotFoundException("Фильм не найден"));
+            Film oldFilm = optional.orElseThrow(() -> new NotFoundException("Фильм " + film.getId() + " не найден"));
             Set<Long> addDifference = new HashSet<>(
                     film.getGenres()
                             .stream()
@@ -204,7 +262,7 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = getById(filmId).orElseThrow(() -> new NotFoundException("Фильм не найден"));
+        Film film = getById(filmId).orElseThrow(() -> new NotFoundException("Фильм " + filmId + " не найден"));
         if (!film.getLikes().contains(userId)) {
             update(
                     ADD_LIKE,
@@ -215,7 +273,7 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        Film film = getById(filmId).orElseThrow(() -> new NotFoundException("Фильм не найден"));
+        Film film = getById(filmId).orElseThrow(() -> new NotFoundException("Фильм " + filmId + " не найден"));
         if (film.getLikes().contains(userId)) {
             update(
                     DELETE_LIKE,
@@ -226,7 +284,24 @@ public class FilmDbStorage extends BaseStorage<Film> implements FilmStorage {
     }
 
     public Collection<Film> getPopularFilms(Integer count) {
-        return findMany(POPULAR_FILMS, count);
+        List<Film> films = findMany(POPULAR_FILMS, count);
+        Map<Long, List<Genre>> filmGenres = getGenresByFilmId(
+                films.stream()
+                        .map(Film::getId)
+                        .toList()
+        );
+        Map<Long, List<Long>> filmLikes = getLikesByFilmId(
+                films.stream()
+                        .map(Film::getId)
+                        .toList()
+        );
+        for (Film film: films) {
+            List<Genre> genres = filmGenres.getOrDefault(film.getId(), Collections.emptyList());
+            film.setGenres(genres != null ? new HashSet<>(genres) : new HashSet<>());
+            List<Long> likes = filmLikes.getOrDefault(film.getId(), Collections.emptyList());
+            film.setLikes(likes != null ? new HashSet<>(likes) : new HashSet<>());
+        }
+        return films;
     }
 
     private void batchProcessGenres(String query, Long filmId, List<Long> genres) {

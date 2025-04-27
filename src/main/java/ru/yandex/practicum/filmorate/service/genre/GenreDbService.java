@@ -30,7 +30,7 @@ public class GenreDbService implements GenreService {
     @Override
     public Genre getById(Long id) {
         return genreStorage.getById(id).orElseThrow(() -> {
-            NotFoundException e = new NotFoundException("Жанр не найден");
+            NotFoundException e = new NotFoundException("Жанр " + id + " не найден");
             log.error(e.getMessage());
             return e;
         });

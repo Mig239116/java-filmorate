@@ -29,7 +29,7 @@ public class MpaDbService implements MpaService {
     @Override
     public Mpa getById(Long id) {
         return mpaStorage.getById(id).orElseThrow(() -> {
-            NotFoundException e = new NotFoundException("Рейтинг не найден");
+            NotFoundException e = new NotFoundException("Рейтинг " + id + " не найден");
             log.error(e.getMessage());
             return e;
         });
